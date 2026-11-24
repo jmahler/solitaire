@@ -1,0 +1,210 @@
+:root {
+  --bg-felt: #1b4332;
+  --bg-toolbar: #122e22;
+  --pile-border: rgba(255, 255, 255, 0.22);
+  --card-bg: #ffffff;
+  --card-back: #2b59c3;
+  --card-width: clamp(54px, 11vw, 96px);
+  --card-height: calc(var(--card-width) * 1.4);
+  --card-radius: 6px;
+}
+
+* {
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg-felt);
+  color: #f8fafc;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+.toolbar {
+  background: var(--bg-toolbar);
+  padding: 0.6rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.controls-left, .controls-right, .variant-options {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+select, button {
+  background: #234e3b;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 5px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+select:hover, button:hover:not(:disabled) {
+  background: #2d6a4f;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.board {
+  flex: 1;
+  padding: 1rem;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.top-row, .tableau-row {
+  display: grid;
+  gap: clamp(6px, 1.5vw, 14px);
+  justify-content: center;
+}
+
+.pile {
+  width: var(--card-width);
+  min-height: var(--card-height);
+  border: 2px dashed var(--pile-border);
+  border-radius: var(--card-radius);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.pile-label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  text-transform: uppercase;
+}
+
+.pile.valid-target {
+  border-color: #facc15;
+  background: rgba(250, 204, 21, 0.12);
+}
+
+.card {
+  width: var(--card-width);
+  height: var(--card-height);
+  border-radius: var(--card-radius);
+  background: var(--card-bg);
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px 6px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.card.red { color: #dc2626; }
+.card.black { color: #0f172a; }
+
+.card.face-down {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--card-back),
+    var(--card-back) 6px,
+    #1e40af 6px,
+    #1e40af 12px
+  );
+  border-color: #e2e8f0;
+  cursor: default;
+}
+
+.card-corner {
+  font-size: clamp(0.8rem, 1.8vw, 1.05rem);
+  line-height: 1;
+}
+
+.card-center {
+  font-size: clamp(1.4rem, 3.4vw, 2.2rem);
+  align-self: center;
+  line-height: 1;
+}
+
+/* Visual feedback states (Minimal Animation) */
+.card.selected {
+  box-shadow: 0 0 0 3px #facc15, 0 6px 12px rgba(0, 0, 0, 0.45);
+  transform: translateY(-4px);
+  z-index: 50 !important;
+}
+
+@keyframes card-arrive {
+  0% {
+    box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.95);
+    filter: brightness(1.22);
+  }
+  100% {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+    filter: brightness(1);
+  }
+}
+
+.card.just-moved {
+  animation: card-arrive 280ms ease-out forwards;
+}
+
+@keyframes card-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.card.invalid-shake {
+  animation: card-shake 180ms ease-in-out;
+}
+
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.92;
+}
+
+.win-banner {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.win-banner.hidden { display: none; }
+
+.win-card {
+  background: #122e22;
+  border: 2px solid #facc15;
+  border-radius: 10px;
+  padding: 2rem;
+  text-align: center;
+}
