@@ -1,4 +1,4 @@
-const CACHE_NAME = 'solitaire-v2';
+const CACHE_NAME = 'solitaire-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -10,7 +10,8 @@ const ASSETS = [
   './js/engine.js',
   './js/renderer.js',
   './js/games/klondike.js',
-  './js/games/freecell.js'
+  './js/games/freecell.js',
+  './js/games/spider.js'
 ];
 
 self.addEventListener('install', (e) => {

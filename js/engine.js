@@ -48,7 +48,10 @@ export class GameEngine {
   start(variant, config = {}) {
     this.variant = variant;
     this.config = { ...variant.defaultConfig, ...config };
-    this.state = variant.setup(createDeck(), this.config);
+    const deck = variant.createCustomDeck
+      ? variant.createCustomDeck(this.config)
+      : createDeck();
+    this.state = variant.setup(deck, this.config);
     this.history = [];
     this.moves = 0;
   }
@@ -81,6 +84,10 @@ export class GameEngine {
     // Auto-flip newly exposed top card in tableau
     if (fromPile.type === 'tableau' && fromPile.cards.length > 0) {
       fromPile.cards[fromPile.cards.length - 1].faceUp = true;
+    }
+
+    if (this.variant.onAfterMove) {
+      this.variant.onAfterMove(this.state);
     }
 
     this.moves++;

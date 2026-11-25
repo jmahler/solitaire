@@ -4,7 +4,7 @@
   --pile-border: rgba(255, 255, 255, 0.22);
   --card-bg: #ffffff;
   --card-back: #2b59c3;
-  --card-width: clamp(54px, 11vw, 96px);
+  --card-width: clamp(46px, 8.6vw, 88px);
   --card-height: calc(var(--card-width) * 1.4);
   --card-radius: 6px;
 }
@@ -65,7 +65,7 @@ button:disabled {
 .board {
   flex: 1;
   padding: 1rem;
-  max-width: 960px;
+  max-width: 1060px;
   width: 100%;
   margin: 0 auto;
   display: flex;
