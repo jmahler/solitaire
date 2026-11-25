@@ -43,6 +43,20 @@ body {
   gap: 0.5rem;
 }
 
+.status-badge {
+  background: #991b1b;
+  color: #fef2f2;
+  border: 1px solid #f87171;
+  border-radius: 5px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-badge.hidden {
+  display: none;
+}
+
 select, button {
   background: #234e3b;
   color: #fff;

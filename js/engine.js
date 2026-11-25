@@ -67,6 +67,47 @@ export class GameEngine {
     return [];
   }
 
+  hasLegalMoves() {
+    const piles = Object.values(this.state.piles);
+
+    // 1. Check if the Stock can still be clicked/dealt
+    const stock = this.state.piles.stock;
+    if (stock && this.variant.onStockClick) {
+      if (stock.cards.length > 0) {
+        // In Spider, stock only works if no tableau column is empty
+        if (this.variant.id === 'spider') {
+          const hasEmptyCol = this.state.layout.tableau.some(
+            id => this.state.piles[id].cards.length === 0
+          );
+          if (!hasEmptyCol) return true;
+        } else {
+          return true;
+        }
+      } else if (this.state.piles.waste?.cards.length > 0) {
+        // Klondike can recycle the waste pile back into the stock
+        return true;
+      }
+    }
+
+    // 2. Check every legal pickup against every legal drop target
+    for (const fromPile of piles) {
+      if (fromPile.type === 'stock') continue;
+      for (let i = 0; i < fromPile.cards.length; i++) {
+        if (!this.variant.canPickUp(fromPile, i, this.state)) continue;
+        const movingCards = fromPile.cards.slice(i);
+
+        for (const toPile of piles) {
+          if (fromPile.id === toPile.id || toPile.type === 'stock') continue;
+          if (this.variant.canDrop(movingCards, toPile, this.state)) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
   moveCards(fromPileId, cardIndex, toPileId) {
     if (fromPileId === toPileId) return null;
     const fromPile = this.state.piles[fromPileId];

@@ -16,6 +16,7 @@ const moveCounter = document.getElementById('move-counter');
 const winBanner = document.getElementById('win-banner');
 const winStats = document.getElementById('win-stats');
 const winNewGameBtn = document.getElementById('win-new-game-btn');
+const statusBadge = document.getElementById('status-badge');
 
 let selection = null;
 let dragState = null;
@@ -80,8 +81,11 @@ function refreshUI(movedCardIds = []) {
   renderBoard(boardEl, engine, selection, movedCardIds);
 
   if (engine.isWon()) {
+    statusBadge.classList.add('hidden');
     winStats.textContent = `Completed ${engine.variant.name} in ${engine.moves} moves.`;
     winBanner.classList.remove('hidden');
+  } else {
+    statusBadge.classList.toggle('hidden', engine.hasLegalMoves());
   }
 }
 
