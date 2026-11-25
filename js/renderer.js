@@ -61,6 +61,32 @@ function renderPile(pile, engine, selection, movedSet) {
     }
   }
 
+  let faceUpStep = 30;
+  const faceDownStep = 10;
+
+  if (pile.type === 'tableau' && pile.cards.length > 0) {
+    const cardWidth = Math.min(155, Math.max(78, window.innerWidth * 0.092));
+    const cardHeight = cardWidth * 1.4;
+    const maxColHeight = window.innerHeight - 210;
+
+    const faceUpCount = pile.cards.filter(c => c.faceUp).length;
+    const faceDownCount = pile.cards.length - faceUpCount;
+    const neededHeight =
+      cardHeight +
+      faceDownCount * faceDownStep +
+      Math.max(0, faceUpCount - 1) * faceUpStep;
+
+    if (neededHeight > maxColHeight && faceUpCount > 1) {
+      faceUpStep = Math.max(
+        18,
+        Math.floor(
+          (maxColHeight - cardHeight - faceDownCount * faceDownStep) /
+            (faceUpCount - 1)
+        )
+      );
+    }
+  }
+
   let offsetY = 0;
   pile.cards.forEach((card, index) => {
     const cardEl = createCardElement(card);
@@ -84,7 +110,7 @@ function renderPile(pile, engine, selection, movedSet) {
     pileEl.appendChild(cardEl);
 
     if (pile.type === 'tableau') {
-      offsetY += card.faceUp ? 26 : 12;
+      offsetY += card.faceUp ? faceUpStep : faceDownStep;
     } else if (pile.type === 'waste' && engine.config.drawCount === 3) {
       const visibleStart = Math.max(0, pile.cards.length - 3);
       if (index >= visibleStart) {

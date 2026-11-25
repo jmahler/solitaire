@@ -214,4 +214,6 @@ undoBtn.addEventListener('click', () => {
   refreshUI();
 });
 
+window.addEventListener('resize', () => refreshUI());
+
 init();
