@@ -11,6 +11,7 @@ const boardEl = document.getElementById('board');
 const gameSelect = document.getElementById('game-select');
 const optionsEl = document.getElementById('variant-options');
 const newGameBtn = document.getElementById('new-game-btn');
+const hintBtn = document.getElementById('hint-btn');
 const undoBtn = document.getElementById('undo-btn');
 const moveCounter = document.getElementById('move-counter');
 const winBanner = document.getElementById('win-banner');
@@ -19,6 +20,7 @@ const winNewGameBtn = document.getElementById('win-new-game-btn');
 const statusBadge = document.getElementById('status-badge');
 
 let selection = null;
+let hintTargetPileId = null;
 let dragState = null;
 
 function init() {
@@ -70,22 +72,25 @@ function loadVariant(variantId) {
 
 function startNewGame(variant = engine.variant, config = engine.config) {
   selection = null;
+  hintTargetPileId = null;
   winBanner.classList.add('hidden');
   engine.start(variant, config);
   refreshUI();
 }
 
 function refreshUI(movedCardIds = []) {
+  const hint = engine.findHint();
   moveCounter.textContent = `Moves: ${engine.moves}`;
   undoBtn.disabled = engine.history.length === 0;
-  renderBoard(boardEl, engine, selection, movedCardIds);
+  hintBtn.disabled = !hint || engine.isWon();
+  renderBoard(boardEl, engine, selection, movedCardIds, hintTargetPileId);
 
   if (engine.isWon()) {
     statusBadge.classList.add('hidden');
     winStats.textContent = `Completed ${engine.variant.name} in ${engine.moves} moves.`;
     winBanner.classList.remove('hidden');
   } else {
-    statusBadge.classList.toggle('hidden', engine.hasLegalMoves());
+    statusBadge.classList.toggle('hidden', hint !== null);
   }
 }
 
@@ -102,6 +107,7 @@ boardEl.addEventListener('pointerdown', (e) => {
   // Handle Stock pile click immediately
   if (pile.type === 'stock') {
     selection = null;
+    hintTargetPileId = null;
     const moved = engine.handleStockClick();
     refreshUI(moved || []);
     return;
@@ -111,12 +117,14 @@ boardEl.addEventListener('pointerdown', (e) => {
   if (selection) {
     if (selection.pileId === pileId && selection.cardIndex === cardIndex) {
       selection = null;
+      hintTargetPileId = null;
       refreshUI();
       return;
     }
     const moved = engine.moveCards(selection.pileId, selection.cardIndex, pileId);
     if (moved) {
       selection = null;
+      hintTargetPileId = null;
       refreshUI(moved);
       return;
     }
@@ -143,6 +151,36 @@ boardEl.addEventListener('pointerdown', (e) => {
       selectedEl.classList.add('invalid-shake');
     }
   }
+});
+
+hintBtn.addEventListener('click', () => {
+  const stockEl = boardEl.querySelector('[data-pile-id="stock"]');
+  const isHintActive =
+    (selection !== null && hintTargetPileId !== null) ||
+    Boolean(stockEl?.classList.contains('valid-target'));
+
+  if (isHintActive) {
+    selection = null;
+    hintTargetPileId = null;
+    refreshUI();
+    return;
+  }
+
+  const hint = engine.findHint();
+  if (!hint) return;
+
+  if (hint.fromPileId === 'stock') {
+    selection = null;
+    hintTargetPileId = null;
+    refreshUI();
+    const updatedStockEl = boardEl.querySelector('[data-pile-id="stock"]');
+    if (updatedStockEl) updatedStockEl.classList.add('valid-target');
+    return;
+  }
+
+  selection = { pileId: hint.fromPileId, cardIndex: hint.cardIndex };
+  hintTargetPileId = hint.toPileId;
+  refreshUI();
 });
 
 window.addEventListener('pointermove', (e) => {
@@ -210,6 +248,7 @@ newGameBtn.addEventListener('click', () => startNewGame());
 winNewGameBtn.addEventListener('click', () => startNewGame());
 undoBtn.addEventListener('click', () => {
   selection = null;
+  hintTargetPileId = null;
   engine.undo();
   refreshUI();
 });

@@ -134,6 +134,11 @@ button:disabled {
   background: rgba(250, 204, 21, 0.12);
 }
 
+.pile.valid-target .card:last-child {
+  outline: 3px dashed #facc15;
+  outline-offset: -3px;
+}
+
 .card {
   width: var(--card-width);
   height: var(--card-height);

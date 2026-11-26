@@ -12,7 +12,7 @@ export function createCardElement(card) {
   return el;
 }
 
-export function renderBoard(boardEl, engine, selection, movedCardIds = []) {
+export function renderBoard(boardEl, engine, selection, movedCardIds = [], hintTargetPileId = null) {
   const { state, variant } = engine;
   const movedSet = new Set(movedCardIds);
   boardEl.innerHTML = '';
@@ -26,7 +26,7 @@ export function renderBoard(boardEl, engine, selection, movedCardIds = []) {
       topRow.appendChild(document.createElement('div'));
       continue;
     }
-    topRow.appendChild(renderPile(state.piles[pileId], engine, selection, movedSet));
+    topRow.appendChild(renderPile(state.piles[pileId], engine, selection, movedSet, hintTargetPileId));
   }
 
   const tableauRow = document.createElement('div');
@@ -34,13 +34,13 @@ export function renderBoard(boardEl, engine, selection, movedCardIds = []) {
   tableauRow.style.gridTemplateColumns = `repeat(${state.layout.tableau.length}, var(--card-width))`;
 
   for (const pileId of state.layout.tableau) {
-    tableauRow.appendChild(renderPile(state.piles[pileId], engine, selection, movedSet));
+    tableauRow.appendChild(renderPile(state.piles[pileId], engine, selection, movedSet, hintTargetPileId));
   }
 
   boardEl.append(topRow, tableauRow);
 }
 
-function renderPile(pile, engine, selection, movedSet) {
+function renderPile(pile, engine, selection, movedSet, hintTargetPileId = null) {
   const pileEl = document.createElement('div');
   pileEl.className = 'pile';
   pileEl.dataset.pileId = pile.id;
@@ -56,7 +56,8 @@ function renderPile(pile, engine, selection, movedSet) {
   if (selection && selection.pileId !== pile.id) {
     const srcPile = engine.state.piles[selection.pileId];
     const movingCards = srcPile.cards.slice(selection.cardIndex);
-    if (engine.variant.canDrop(movingCards, pile, engine.state)) {
+    const matchesHint = !hintTargetPileId || pile.id === hintTargetPileId;
+    if (matchesHint && engine.variant.canDrop(movingCards, pile, engine.state)) {
       pileEl.classList.add('valid-target');
     }
   }

@@ -67,45 +67,73 @@ export class GameEngine {
     return [];
   }
 
-  hasLegalMoves() {
+  findHint(skipCount = 0) {
     const piles = Object.values(this.state.piles);
+    const candidates = [];
 
-    // 1. Check if the Stock can still be clicked/dealt
-    const stock = this.state.piles.stock;
-    if (stock && this.variant.onStockClick) {
-      if (stock.cards.length > 0) {
-        // In Spider, stock only works if no tableau column is empty
-        if (this.variant.id === 'spider') {
-          const hasEmptyCol = this.state.layout.tableau.some(
-            id => this.state.piles[id].cards.length === 0
-          );
-          if (!hasEmptyCol) return true;
-        } else {
-          return true;
-        }
-      } else if (this.state.piles.waste?.cards.length > 0) {
-        // Klondike can recycle the waste pile back into the stock
-        return true;
-      }
-    }
-
-    // 2. Check every legal pickup against every legal drop target
     for (const fromPile of piles) {
-      if (fromPile.type === 'stock') continue;
+      if (fromPile.type === 'stock' || fromPile.type === 'foundation') continue;
       for (let i = 0; i < fromPile.cards.length; i++) {
         if (!this.variant.canPickUp(fromPile, i, this.state)) continue;
         const movingCards = fromPile.cards.slice(i);
 
         for (const toPile of piles) {
           if (fromPile.id === toPile.id || toPile.type === 'stock') continue;
-          if (this.variant.canDrop(movingCards, toPile, this.state)) {
-            return true;
+          if (!this.variant.canDrop(movingCards, toPile, this.state)) continue;
+
+          let score = 0;
+          if (toPile.type === 'foundation') {
+            score = 100;
+          } else if (toPile.type === 'tableau' && toPile.cards.length > 0) {
+            score = 60;
+            if (fromPile.type === 'cell') score += 15;
+            if (i === 0) score += 15;
+          } else if (toPile.type === 'tableau' && toPile.cards.length === 0) {
+            score = i === 0 && fromPile.type === 'tableau' ? -50 : 25;
+          } else if (toPile.type === 'cell') {
+            score = 10;
           }
+
+          if (i > 0 && !fromPile.cards[i - 1].faceUp) {
+            score += 40;
+          }
+
+          candidates.push({
+            fromPileId: fromPile.id,
+            cardIndex: i,
+            toPileId: toPile.id,
+            score
+          });
         }
       }
     }
 
-    return false;
+    // Add Stock click as a candidate if available
+    const stock = this.state.piles.stock;
+    if (stock && this.variant.onStockClick) {
+      const canClickStock =
+        (stock.cards.length > 0 &&
+          (this.variant.id !== 'spider' ||
+            !this.state.layout.tableau.some(id => this.state.piles[id].cards.length === 0))) ||
+        (stock.cards.length === 0 && (this.state.piles.waste?.cards.length || 0) > 0);
+
+      if (canClickStock) {
+        candidates.push({ fromPileId: 'stock', cardIndex: -1, toPileId: null, score: 20 });
+      }
+    }
+
+    if (candidates.length === 0) return null;
+
+    // Sort highest-value moves first, excluding negative empty-to-empty shuffles unless nothing else exists
+    const productive = candidates.filter(c => c.score > 0);
+    const pool = productive.length > 0 ? productive : candidates;
+    pool.sort((a, b) => b.score - a.score);
+
+    return pool[skipCount % pool.length];
+  }
+
+  hasLegalMoves() {
+    return this.findHint() !== null;
   }
 
   moveCards(fromPileId, cardIndex, toPileId) {
