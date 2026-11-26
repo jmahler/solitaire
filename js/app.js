@@ -35,7 +35,8 @@ function init() {
   gameSelect.value = savedVariantId;
   loadVariant(savedVariantId);
 
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !isLocal) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 }
