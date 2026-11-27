@@ -2,9 +2,10 @@ import { GameEngine } from './engine.js';
 import { Klondike } from './games/klondike.js';
 import { FreeCell } from './games/freecell.js';
 import { Spider } from './games/spider.js';
+import { Easthaven } from './games/easthaven.js';
 import { renderBoard, createCardElement } from './renderer.js';
 
-const VARIANTS = [Klondike, FreeCell, Spider];
+const VARIANTS = [Klondike, FreeCell, Spider, Easthaven];
 const engine = new GameEngine();
 
 const boardEl = document.getElementById('board');
