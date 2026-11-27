@@ -1,4 +1,4 @@
-const CACHE_NAME = 'solitaire-v10';
+const CACHE_NAME = 'solitaire-v11';
 const ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const ASSETS = [
   './js/games/freecell.js',
   './js/games/spider.js',
   './js/games/easthaven.js'
+  './js/games/eightoff.js'
 ];
 
 // Install: pre-cache app shell and activate immediately
