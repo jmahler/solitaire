@@ -19,6 +19,8 @@ const winBanner = document.getElementById('win-banner');
 const winStats = document.getElementById('win-stats');
 const winNewGameBtn = document.getElementById('win-new-game-btn');
 const statusBadge = document.getElementById('status-badge');
+const versionEl = document.getElementById('app-version');
+
 
 let selection = null;
 let hintTargetPileId = null;
@@ -47,6 +49,16 @@ function init() {
 
     navigator.serviceWorker.register('./sw.js')
       .then(reg => reg.update())
+      .catch(() => {});
+  }
+
+  if (versionEl) {
+    fetch('./sw.js', { cache: 'no-store' })
+      .then(res => res.text())
+      .then(text => {
+        const match = text.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
+        if (match) versionEl.textContent = match[1];
+      })
       .catch(() => {});
   }
 }

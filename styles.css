@@ -52,6 +52,16 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.app-version {
+  position: fixed;
+  bottom: 6px;
+  right: 10px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+  user-select: none;
+}
+
 .controls-left, .controls-right, .variant-options {
   display: flex;
   align-items: center;
