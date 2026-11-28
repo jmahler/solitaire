@@ -21,11 +21,13 @@ const winStats = document.getElementById('win-stats');
 const winNewGameBtn = document.getElementById('win-new-game-btn');
 const statusBadge = document.getElementById('status-badge');
 const versionEl = document.getElementById('app-version');
+const autoFinishBtn = document.getElementById('auto-finish-btn');
 
 
 let selection = null;
 let hintTargetPileId = null;
 let dragState = null;
+let autoFinishTimer = null;
 
 function init() {
   for (const v of VARIANTS) {
@@ -95,6 +97,7 @@ function loadVariant(variantId) {
 }
 
 function startNewGame(variant = engine.variant, config = engine.config) {
+  stopAutoFinish();
   selection = null;
   hintTargetPileId = null;
   winBanner.classList.add('hidden');
@@ -108,6 +111,10 @@ function refreshUI(movedCardIds = []) {
   undoBtn.disabled = engine.history.length === 0;
   hintBtn.disabled = !hint || engine.isWon();
   renderBoard(boardEl, engine, selection, movedCardIds, hintTargetPileId);
+
+  if (autoFinishBtn) {
+    autoFinishBtn.hidden = !engine.canAutoComplete();
+  }
 
   if (engine.isWon()) {
     statusBadge.classList.add('hidden');
@@ -253,8 +260,16 @@ window.addEventListener('pointerup', (e) => {
   dragState = null;
 });
 
+function stopAutoFinish() {
+  if (autoFinishTimer) {
+    clearInterval(autoFinishTimer);
+    autoFinishTimer = null;
+  }
+}
+
 // Double-click / double-tap auto-send to Foundation
 boardEl.addEventListener('dblclick', (e) => {
+  if (autoFinishTimer) return;
   const cardEl = e.target.closest('.card');
   if (!cardEl) return;
   const moved = engine.autoMoveToFoundation(
@@ -263,14 +278,35 @@ boardEl.addEventListener('dblclick', (e) => {
   );
   if (moved) {
     selection = null;
+    hintTargetPileId = null;
     refreshUI(moved);
   }
 });
+
+if (autoFinishBtn) {
+  autoFinishBtn.addEventListener('click', () => {
+    if (autoFinishTimer) return;
+    autoFinishBtn.hidden = true;
+
+    autoFinishTimer = setInterval(() => {
+      const moved = engine.moveNextToFoundation();
+      if (!moved) {
+        stopAutoFinish();
+        refreshUI();
+        return;
+      }
+      selection = null;
+      hintTargetPileId = null;
+      refreshUI(moved);
+    }, 80);
+  });
+}
 
 gameSelect.addEventListener('change', () => loadVariant(gameSelect.value));
 newGameBtn.addEventListener('click', () => startNewGame());
 winNewGameBtn.addEventListener('click', () => startNewGame());
 undoBtn.addEventListener('click', () => {
+  stopAutoFinish();
   selection = null;
   hintTargetPileId = null;
   engine.undo();

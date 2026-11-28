@@ -191,4 +191,45 @@ export class GameEngine {
   isWon() {
     return this.variant.isWon(this.state);
   }
+
+  canAutoComplete() {
+    if (this.variant.isWon(this.state)) return false;
+
+    const piles = Object.values(this.state.piles);
+    const foundations = piles.filter(p => p.type === 'foundation');
+    if (foundations.length === 0) return false;
+
+    let hasRemainingCards = false;
+
+    for (const pile of piles) {
+      if ((pile.type === 'stock' || pile.type === 'waste') && pile.cards.length > 0) {
+        return false;
+      }
+      if (pile.type === 'cell' && pile.cards.length > 0) {
+        hasRemainingCards = true;
+      }
+      if (pile.type === 'tableau' && pile.cards.length > 0) {
+        hasRemainingCards = true;
+        for (let i = 0; i < pile.cards.length; i++) {
+          if (!pile.cards[i].faceUp) return false;
+          if (i > 0 && pile.cards[i].value > pile.cards[i - 1].value) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return hasRemainingCards;
+  }
+
+  moveNextToFoundation() {
+    for (const pile of Object.values(this.state.piles)) {
+      if (pile.type === 'foundation' || pile.type === 'stock' || pile.cards.length === 0) {
+        continue;
+      }
+      const moved = this.autoMoveToFoundation(pile.id, pile.cards.length - 1);
+      if (moved) return moved;
+    }
+    return null;
+  }
 }
